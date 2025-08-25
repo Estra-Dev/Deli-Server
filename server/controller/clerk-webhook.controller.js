@@ -6,7 +6,20 @@ const CLERK_WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 export const handleWebhook = async (req, res) => {
   // Handle webhook events
   const payload = req.body;
-  const headers = req.headers;
+  // const headers = req.headers;
+  const headers = {
+    "svix-id": req.headers["svix-id"],
+    "svix-timestamp": req.headers["svix-timestamp"],
+    "svix-signature": req.headers["svix-signature"],
+  };
+
+  if (
+    !headers["svix-id"] ||
+    !headers["svix-timestamp"] ||
+    !headers["svix-signature"]
+  ) {
+    return res.status(400).json({ message: "Missing svix headers" });
+  }
 
   try {
     // verify clerk webhook with svix
