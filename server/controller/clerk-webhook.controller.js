@@ -14,39 +14,58 @@ export const handleWebhook = async (req, res) => {
     const evt = wh.verify(JSON.stringify(payload), headers);
 
     switch (evt.type) {
-      case "user.created":
+      case "user.created": {
+        const userExists = await User.findOne({
+          email: evt.data.email_addresses[0].email_address,
+        });
         // Handle user created event
-        await User.create({
+        if (userExists) {
+          // User already exists
+          console.log("User already exists");
+          // return res.status(200).json({ message: "User already exists" });
+        }
+        const newUser = await User.create({
           clerkId: evt.data.id,
-          email: evt.data.emailAddresses[0].email_address,
+          email: evt.data.email_addresses[0].email_address,
           firstName: evt.data.first_name,
           lastName: evt.data.last_name,
         });
 
-        console.log(User);
+        res.status(201).json(newUser);
+        console.log(newUser);
         break;
-
-      case "user.updated":
+      }
+      case "user.updated": {
         // update user
-        await User.findOneAndUpdate(
+
+        const userExists = await User.findOne({
+          email: evt.data.email_addresses[0].email_address,
+        });
+        if (!userExists) {
+          // User does not exist
+          console.log("User does not exist");
+          return res.status(200).json({ message: "User does not exist" });
+        }
+        const updatedUser = await User.findOneAndUpdate(
           { clerkId: evt.data.id },
           {
-            email: evt.data.emailAddresses[0].email_address,
+            email: evt.data.email_addresses[0].email_address,
             firstName: evt.data.first_name,
             lastName: evt.data.last_name,
           }
         );
 
-        console.log(User);
+        // res.status(200).json(updatedUser);
+        console.log(updatedUser);
         break;
-
-      case "user.deleted":
+      }
+      case "user.deleted": {
         // delete user
         await User.findOneAndDelete({ clerkId: evt.data.id });
 
         console.log("User Deleted");
         break;
-
+      }
       default:
         console.log(`Unhandled event type: ${evt.type}`);
         break;
