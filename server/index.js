@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(clerkMiddleware());
 
 app.use("/api/deliveries", deliveryRouter);
-app.use("/api/clerk-webhooks", ClerkRouter);
+app.use("/api", ClerkRouter);
 
 const PORT = process.env.PORT;
 
