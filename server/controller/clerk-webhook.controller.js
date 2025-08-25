@@ -11,7 +11,7 @@ export const handleWebhook = async (req, res) => {
   try {
     // verify clerk webhook with svix
     const wh = new Webhook(CLERK_WEBHOOK_SECRET);
-    const evt = wh.verify(JSON.stringify(payload), headers);
+    const evt = wh.verify(payload, headers);
 
     switch (evt.type) {
       case "user.created": {
