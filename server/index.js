@@ -6,7 +6,7 @@ import http from "http";
 import { Server } from "socket.io";
 import deliveryRouter from "./routes/deliveeries.routes.js";
 import ClerkRouter from "./routes/clerk-webhooks.routes.js";
-import { clerkClient, clerkMiddleware } from "@clerk/express";
+// import { clerkClient, clerkMiddleware } from "@clerk/express";
 
 // configurations
 dotenv.config();
@@ -17,12 +17,12 @@ const io = new Server(server, { cors: { origin: "*" } });
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(clerkMiddleware());
-
-app.use("/api/deliveries", deliveryRouter);
+// app.use(clerkMiddleware());
 app.use("/api", ClerkRouter);
 
 app.use(express.json());
+app.use("/api/deliveries", deliveryRouter);
+
 const PORT = process.env.PORT;
 
 // database connection
@@ -45,9 +45,10 @@ io.on("connection", (socket) => {
 });
 
 app.get("/", async (req, res) => {
-  const { data } = await clerkClient.users.getUserList();
-  res.json({ users: data });
-  console.log("user-data", data);
+  // const { data } = await clerkClient.users.getUserList();
+  // res.json({ users: data });
+  // console.log("user-data", data);
+  res.send("Welcome to Delivery Platform API");
 });
 
 server.listen(PORT, () => {
