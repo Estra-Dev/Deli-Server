@@ -4,7 +4,7 @@ const userSchema = new Schema(
   {
     clerkId: { type: String, required: true, unique: true },
     email: { type: String, required: true },
-    name: { type: String, required: true },
+    admin: { type: Boolean, default: false },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     // Add other user fields as needed

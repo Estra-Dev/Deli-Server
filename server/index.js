@@ -51,6 +51,8 @@ app.get("/", async (req, res) => {
   res.send("Welcome to Delivery Platform API");
 });
 
+app.get("/test", (req, res) => res.send("Server is live"));
+
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

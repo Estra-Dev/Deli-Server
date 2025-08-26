@@ -1,64 +1,40 @@
 import { Webhook } from "svix";
 import User from "../models/User.js";
 
-const CLERK_WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
+// const CLERK_WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
 export const handleWebhook = async (req, res) => {
-  // Handle webhook events
-  const payload = req.body;
-  // const headers = req.headers;
-  const headers = {
-    "svix-id": req.headers["svix-id"],
-    "svix-timestamp": req.headers["svix-timestamp"],
-    "svix-signature": req.headers["svix-signature"],
-  };
-
-  if (
-    !headers["svix-id"] ||
-    !headers["svix-timestamp"] ||
-    !headers["svix-signature"]
-  ) {
-    return res.status(400).json({ message: "Missing svix headers" });
-  }
-
   try {
-    // verify clerk webhook with svix
-    const wh = new Webhook(CLERK_WEBHOOK_SECRET);
+    const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
+    const payload = req.body;
+    const headers = req.headers;
     const evt = wh.verify(payload, headers);
+
+    console.log("verified event type", evt.type);
 
     switch (evt.type) {
       case "user.created": {
         const userExists = await User.findOne({
-          email: evt.data.email_addresses[0].email_address,
+          clerkId: evt.data.id,
         });
-        // Handle user created event
-        if (userExists) {
-          // User already exists
-          console.log("User already exists");
+        // // Handle user created event
+        if (!userExists) {
+          // User does not exist
+          console.log("User does not exist");
           // return res.status(200).json({ message: "User already exists" });
         }
         const newUser = await User.create({
           clerkId: evt.data.id,
-          email: evt.data.email_addresses[0].email_address,
+          email: "user@example.com",
           firstName: evt.data.first_name,
           lastName: evt.data.last_name,
         });
-
-        res.status(201).json(newUser);
         console.log(newUser);
         break;
       }
       case "user.updated": {
         // update user
 
-        const userExists = await User.findOne({
-          email: evt.data.email_addresses[0].email_address,
-        });
-        if (!userExists) {
-          // User does not exist
-          console.log("User does not exist");
-          return res.status(200).json({ message: "User does not exist" });
-        }
         const updatedUser = await User.findOneAndUpdate(
           { clerkId: evt.data.id },
           {
@@ -67,9 +43,7 @@ export const handleWebhook = async (req, res) => {
             lastName: evt.data.last_name,
           }
         );
-
-        // res.status(200).json(updatedUser);
-        console.log(updatedUser);
+        console.log("Updated User:", updatedUser);
         break;
       }
       case "user.deleted": {
@@ -84,10 +58,11 @@ export const handleWebhook = async (req, res) => {
         break;
     }
 
-    res.status(200).json({ message: "Webhook processed" });
+    // res.json({ received: true });
+    // res.status(200).json({ message: "Webhook received" });
+    res.status(200).json({ message: "Webhook received", event: evt.type });
   } catch (error) {
-    console.error(`Error handling webhook: ${error.message}`);
+    console.log("Verification failed", error.message);
     res.status(400).json({ message: "Invalid signature" });
   }
-  // res.status(200).send("Webhook received");
 };
