@@ -67,4 +67,27 @@ export const handleWebhook = async (req, res, next) => {
   //   console.log("Verification failed", error.message);
   //   res.status(400).json({ message: "Invalid signature" });
   // }
+  try {
+    const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
+
+    if (!WEBHOOK_SECRET) {
+      throw new Error("Missing CLERK_WEBHOOK_SECRET in env");
+    }
+
+    const svix = new Webhook(WEBHOOK_SECRET);
+
+    const payload = req.body; // raw buffer
+    const headers = req.headers;
+
+    // Verify the event
+    const event = svix.verify(payload, headers);
+
+    console.log("✅ Clerk Event Verified:", event.type);
+    console.log("📦 Event Data:", event.data);
+
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("❌ Webhook Error:", err.message);
+    res.status(400).json({ error: err.message });
+  }
 };
