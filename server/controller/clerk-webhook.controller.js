@@ -22,57 +22,53 @@ export const handleWebhook = async (req, res, next) => {
     const headers = req.headers;
     //   const evt = wh.verify(payload, headers);
     // Verify the event
-    const event = svix.verify(payload, headers);
+    const evt = svix.verify(payload, headers);
 
-    //   console.log("verified event type", evt.type);
-    console.log("✅ Clerk Event Verified:", event.type);
-    console.log("📦 Event Data:", event.data);
+    switch (evt.type) {
+      case "user.created": {
+        const userExists = await User.findOne({
+          clerkId: evt.data.id,
+        });
+        // // Handle user created event
+        if (!userExists) {
+          // User does not exist
+          console.log("User does not exist");
+          // return res.status(200).json({ message: "User already exists" });
+        }
+        const newUser = await User.create({
+          clerkId: evt.data.id,
+          email: "user@example.com",
+          firstName: evt.data.first_name,
+          lastName: evt.data.last_name,
+        });
+        console.log(newUser);
+        break;
+      }
+      case "user.updated": {
+        // update user
 
-    //   switch (evt.type) {
-    //     case "user.created": {
-    //       const userExists = await User.findOne({
-    //         clerkId: evt.data.id,
-    //       });
-    //       // // Handle user created event
-    //       if (!userExists) {
-    //         // User does not exist
-    //         console.log("User does not exist");
-    //         // return res.status(200).json({ message: "User already exists" });
-    //       }
-    //       const newUser = await User.create({
-    //         clerkId: evt.data.id,
-    //         email: "user@example.com",
-    //         firstName: evt.data.first_name,
-    //         lastName: evt.data.last_name,
-    //       });
-    //       console.log(newUser);
-    //       break;
-    //     }
-    //     case "user.updated": {
-    //       // update user
+        const updatedUser = await User.findOneAndUpdate(
+          { clerkId: evt.data.id },
+          {
+            email: evt.data.email_addresses[0].email_address,
+            firstName: evt.data.first_name,
+            lastName: evt.data.last_name,
+          }
+        );
+        console.log("Updated User:", updatedUser);
+        break;
+      }
+      case "user.deleted": {
+        // delete user
+        await User.findOneAndDelete({ clerkId: evt.data.id });
 
-    //       const updatedUser = await User.findOneAndUpdate(
-    //         { clerkId: evt.data.id },
-    //         {
-    //           email: evt.data.email_addresses[0].email_address,
-    //           firstName: evt.data.first_name,
-    //           lastName: evt.data.last_name,
-    //         }
-    //       );
-    //       console.log("Updated User:", updatedUser);
-    //       break;
-    //     }
-    //     case "user.deleted": {
-    //       // delete user
-    //       await User.findOneAndDelete({ clerkId: evt.data.id });
-
-    //       console.log("User Deleted");
-    //       break;
-    //     }
-    //     default:
-    //       console.log(`Unhandled event type: ${evt.type}`);
-    //       break;
-    //   }
+        console.log("User Deleted");
+        break;
+      }
+      default:
+        console.log(`Unhandled event type: ${evt.type}`);
+        break;
+    }
 
     //   // res.json({ received: true });
     res.status(200).json({ success: true });
