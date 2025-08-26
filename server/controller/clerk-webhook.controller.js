@@ -1,13 +1,10 @@
 import { Webhook } from "svix";
 import User from "../models/User.js";
 
-// const CLERK_WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
-
 export const handleWebhook = async (req, res, next) => {
-  console.log("incoming webhook");
-  next();
+  // console.log("incoming webhook");
+  // next();
   try {
-    //   const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
     const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
     if (!WEBHOOK_SECRET) {
@@ -16,11 +13,9 @@ export const handleWebhook = async (req, res, next) => {
 
     const svix = new Webhook(WEBHOOK_SECRET);
 
-    //   const payload = req.body;
-    //   const headers = req.headers;
     const payload = req.body; // raw buffer
     const headers = req.headers;
-    //   const evt = wh.verify(payload, headers);
+
     // Verify the event
     const evt = svix.verify(payload, headers);
 
@@ -75,7 +70,6 @@ export const handleWebhook = async (req, res, next) => {
     //   // res.status(200).json({ message: "Webhook received" });
     //   res.status(200).json({ message: "Webhook received", event: evt.type });
   } catch (error) {
-    //   console.log("Verification failed", error.message);
     //   res.status(400).json({ message: "Invalid signature" });
     console.error("❌ Webhook Error:", error.message);
     res.status(400).json({ error: error.message });
